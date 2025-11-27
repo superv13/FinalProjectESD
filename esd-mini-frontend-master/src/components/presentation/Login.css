@@ -1,0 +1,125 @@
+/* src/css/Login.css */
+/* Modernized login styles */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 10% 10%, #f3e8ff 0%, #ffffff 25%), #f6f8fb;
+  padding: 40px 16px;
+}
+
+.auth-card {
+  display: flex;
+  width: 920px;
+  max-width: 95%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(30, 41, 59, 0.12);
+  background: #fff;
+}
+
+.auth-brand {
+  flex: 1.1;
+  background: linear-gradient(180deg, #6f42c1 0%, #9b59ff 100%);
+  color: white;
+  padding: 42px 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+}
+
+.logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.6px;
+}
+
+.auth-brand h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.subtitle {
+  opacity: 0.95;
+  margin-top: 6px;
+}
+
+.auth-form {
+  flex: 1;
+  padding: 36px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.form-inner {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.label-text {
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: #374151;
+}
+
+.field input {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #e6e9ef;
+  font-size: 14px;
+  outline: none;
+  transition: box-shadow 120ms ease, border-color 120ms ease;
+}
+
+.field input:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 6px 20px rgba(124,58,237,0.08);
+}
+
+.btn-primary {
+  background: linear-gradient(90deg,#6f42c1,#8e44ff);
+  color: white;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(142,68,255,0.12); }
+
+.error-message {
+  color: #b91c1c;
+  background: #fff1f2;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .auth-card { flex-direction: column; width: 92%; }
+  .auth-brand { padding: 24px; }
+  .auth-form { padding: 20px; }
+}
+  
+  

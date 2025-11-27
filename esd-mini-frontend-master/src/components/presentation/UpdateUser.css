@@ -1,0 +1,81 @@
+/* General styling for the update user form container */
+.auth-container {
+    margin: 30px auto;
+    padding: 20px;
+    max-width: 600px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Header styling */
+  .auth-container h2 {
+    text-align: center;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  /* Form styling */
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Label styling */
+  .form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+  
+  /* Input field styling */
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    font-size: 1rem;
+    color: #333;
+  }
+  
+  /* Focused input field styling */
+  .form-group input:focus
+  .form-group select:focus {
+    border-color: #420974;
+    outline: none;
+    box-shadow: 0 0 5px rgba(66, 9, 116, 0.5);
+  }
+  
+  /* Dropdown (select) specific styling */
+.form-group select {
+  background-color: #fff;
+  cursor: pointer;
+}
+
+  /* Submit button styling */
+  button[type="submit"] {
+    width: 100%;
+    padding: 10px;
+    background-color: #420974;
+    color: white;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  /* Hover effect for the submit button */
+  button[type="submit"]:hover {
+    background-color: #741ccb;
+  }
+  
+  /* Error message styling (if any) */
+  .error-message {
+    color: red;
+    font-size: 1rem;
+    text-align: center;
+    margin-top: 20px;
+  }
+  

@@ -1,0 +1,115 @@
+/* Dashboard.css */
+.dashboard-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.dashboard-nav {
+  background: linear-gradient(90deg, #6f42c1, #8e44ff);
+  color: white;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-title {
+  font-size: 24px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.logout-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 120ms ease;
+}
+
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.dashboard-content {
+  padding: 40px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.welcome-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  grid-column: 1 / -1;
+}
+
+.welcome-card h2 {
+  margin-top: 0;
+  font-size: 28px;
+}
+
+.welcome-card .subtitle {
+  opacity: 0.9;
+  margin: 8px 0 0 0;
+}
+
+.action-card h3 {
+  margin-top: 0;
+  font-size: 18px;
+  color: #1f2937;
+}
+
+.action-card p {
+  color: #6b7280;
+  margin: 8px 0 16px 0;
+  font-size: 14px;
+}
+
+.card-btn {
+  background: #6f42c1;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 120ms ease;
+  width: 100%;
+  text-align: left;
+}
+
+.card-btn:hover {
+  background: #8e44ff;
+}
+
+.error-message {
+  color: #b91c1c;
+  background: #fff1f2;
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+  margin: 20px;
+}
