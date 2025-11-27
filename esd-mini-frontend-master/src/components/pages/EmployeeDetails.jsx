@@ -81,7 +81,7 @@ function EmployeeDetails() {
             </div>
             <div className="detail-field">
               <label>Department</label>
-              <p>{employee.departmentName || 'N/A'}</p> {/* ✅ Display department name */}
+              <p>{employee.departmentName}</p> 
             </div>
             <div className="detail-field">
               <label>Employee ID</label>
