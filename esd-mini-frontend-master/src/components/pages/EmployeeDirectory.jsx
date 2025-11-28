@@ -120,7 +120,7 @@ function EmployeeDirectory() {
   if (error) return <p className="text-center text-red-600 mt-10">{error}</p>;
 
   return (
-    <div className="flex h-screen bg-gray-50 font-sans">
+    <div className="flex h-[calc(100vh-65px)] bg-gray-50 font-sans">
 
       {/* LEFT PANEL — EMPLOYEE LIST */}
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col shadow-sm z-10">

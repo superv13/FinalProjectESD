@@ -17,8 +17,8 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className="App">
-        <div className="content">
+      <div className="App flex flex-col min-h-screen">
+        <div className="content flex-grow">
           <Routes>
             <Route exact path="/" element={<Login />} />
             <Route path="/oauth2/redirect" element={<OAuth2Redirect />} />

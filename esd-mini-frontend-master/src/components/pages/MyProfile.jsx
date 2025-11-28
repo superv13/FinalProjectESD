@@ -436,6 +436,13 @@ function MyProfile() {
                   Change Photo
                   <input type="file" accept="image/*" onChange={handlePhotoUpload} hidden />
                 </label>
+                <button
+                  onClick={() => navigate(`/auth/update/${profile.id}`, { state: { from: 'profile' } })}
+                  className="upload-photo-btn"
+                  style={{ marginTop: '10px', width: '100%' }}
+                >
+                  Edit Profile
+                </button>
               </div>
 
               {/* Profile Info */}
@@ -480,15 +487,7 @@ function MyProfile() {
                   )}
                 </div>
 
-                <div style={{ gridColumn: '1 / -1', marginTop: '20px', textAlign: 'center' }}>
-                  <button
-                    onClick={() => navigate(`/auth/update/${profile.id}`, { state: { from: 'profile' } })}
-                    className="ai-btn"
-                    style={{ fontSize: '14px', padding: '10px 20px' }}
-                  >
-                    ✏️ Edit Profile
-                  </button>
-                </div>
+
 
               </div>
             </div>
