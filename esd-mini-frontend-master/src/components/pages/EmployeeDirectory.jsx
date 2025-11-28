@@ -26,11 +26,12 @@ function EmployeeDirectory() {
         });
 
         const data = await response.json();
-        setEmployees(data);
+        const employeeList = data.employeesList || [];
+        setEmployees(employeeList);
 
         // Auto-select the first employee
-        if (data.length > 0) {
-          loadEmployeeDetails(data[0].employeeId);
+        if (employeeList.length > 0) {
+          loadEmployeeDetails(employeeList[0].employeeId);
         }
 
       } catch (err) {
@@ -85,9 +86,8 @@ function EmployeeDirectory() {
         {employees.map((emp) => (
           <div
             key={emp.employeeId}
-            className={`p-4 cursor-pointer hover:bg-gray-200 transition ${
-              selectedEmployee?.employeeId === emp.employeeId ? "bg-gray-200" : ""
-            }`}
+            className={`p-4 cursor-pointer hover:bg-gray-200 transition ${selectedEmployee?.employeeId === emp.employeeId ? "bg-gray-200" : ""
+              }`}
             onClick={() => loadEmployeeDetails(emp.employeeId)}
           >
             <h3 className="font-medium">{emp.firstName} {emp.lastName}</h3>

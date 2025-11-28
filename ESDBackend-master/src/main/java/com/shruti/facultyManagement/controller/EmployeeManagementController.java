@@ -22,7 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/employees")
 public class EmployeeManagementController {
-    
+
     @Autowired
     private EmployeeManagementService employeeManagementService;
 
@@ -33,7 +33,7 @@ public class EmployeeManagementController {
     }
 
     @GetMapping("/all")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<EmployeeReqRes> getAllEmployees() {
         EmployeeReqRes response = employeeManagementService.getAllEmployees();
         return ResponseEntity.ok(response);
@@ -78,9 +78,11 @@ public class EmployeeManagementController {
     public ResponseEntity<EmployeeReqRes> updateEmployeeCourse(
             @PathVariable Integer employeeId,
             @RequestBody CourseDisplay updateCourseRequest) {
-        System.out.println("Request received: Employee ID = " + employeeId + ", Course Code = " + updateCourseRequest.getCourseCode());
+        System.out.println("Request received: Employee ID = " + employeeId + ", Course Code = "
+                + updateCourseRequest.getCourseCode());
 
-        EmployeeReqRes response = employeeManagementService.updateCourseForEmployee(employeeId, updateCourseRequest.getCourseCode());
+        EmployeeReqRes response = employeeManagementService.updateCourseForEmployee(employeeId,
+                updateCourseRequest.getCourseCode());
         return ResponseEntity.ok(response);
     }
 
