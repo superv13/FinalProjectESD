@@ -120,84 +120,155 @@ function EmployeeDirectory() {
   if (error) return <p className="text-center text-red-600 mt-10">{error}</p>;
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-gray-50 font-sans">
 
       {/* LEFT PANEL — EMPLOYEE LIST */}
-      <div className="w-1/3 border-r bg-gray-50 overflow-y-auto">
-        <h2 className="text-xl font-semibold p-4 border-b">Faculty List</h2>
+      <div className="w-80 bg-white border-r border-gray-200 flex flex-col shadow-sm z-10">
+        <div className="p-6 border-b border-gray-100 bg-white sticky top-0 z-10">
+          <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <span className="text-indigo-600">👥</span> Faculty List
+          </h2>
+          <p className="text-xs text-gray-500 mt-1">Select an employee to view details</p>
+        </div>
 
-        {employees.map((emp) => (
-          <div
-            key={emp.employeeId}
-            className={`p-4 cursor-pointer hover:bg-gray-200 transition ${selectedEmployee?.employeeId === emp.employeeId ? "bg-gray-200" : ""
-              }`}
-            onClick={() => loadEmployeeDetails(emp.id)}
-          >
-            <h3 className="font-medium">{emp.firstName} {emp.lastName}</h3>
-            <p className="text-sm text-gray-600">{emp.title}</p>
-          </div>
-        ))}
+        <div className="overflow-y-auto flex-1 p-3 space-y-1">
+          {employees.map((emp) => {
+            const isSelected = selectedEmployee?.employeeId === emp.employeeId;
+            return (
+              <div
+                key={emp.employeeId}
+                onClick={() => loadEmployeeDetails(emp.id)}
+                className={`
+                  group p-4 rounded-xl cursor-pointer transition-all duration-200 ease-in-out border
+                  ${isSelected
+                    ? "bg-indigo-50 border-indigo-200 shadow-sm"
+                    : "bg-white border-transparent hover:bg-gray-50 hover:border-gray-200"
+                  }
+                `}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className={`font-semibold text-sm ${isSelected ? "text-indigo-900" : "text-gray-700 group-hover:text-gray-900"}`}>
+                    {emp.firstName} {emp.lastName}
+                  </h3>
+                  {isSelected && <span className="w-2 h-2 rounded-full bg-indigo-500"></span>}
+                </div>
+                <p className={`text-xs ${isSelected ? "text-indigo-600 font-medium" : "text-gray-500"}`}>
+                  {emp.title || 'Faculty Member'}
+                </p>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* RIGHT PANEL — EMPLOYEE DETAILS */}
-      <div className="w-2/3 p-6 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto p-8">
         {selectedEmployee ? (
-          <>
-            <div className="flex items-center gap-4 mb-6">
-              {selectedEmployee.photographPath && (
-                <img
-                  src={
-                    selectedEmployee.photographPath.startsWith("http")
-                      ? selectedEmployee.photographPath
-                      : `http://localhost:8081/images/${selectedEmployee.photographPath}`
-                  }
-                  className="w-24 h-24 rounded-full object-cover border"
-                  alt="employee"
-                />
-              )}
+          <div className="max-w-4xl mx-auto space-y-6">
 
-              <div>
-                <h1 className="text-2xl font-bold">
-                  {selectedEmployee.firstName} {selectedEmployee.lastName}
-                </h1>
-                <p className="text-gray-600">{selectedEmployee.title}</p>
-              </div>
-            </div>
+            {/* Profile Card */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              {/* Header/Banner */}
+              <div className="h-32 bg-gradient-to-r from-indigo-500 to-purple-600"></div>
 
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div>
-                <label className="text-gray-500">Email</label>
-                <p>{selectedEmployee.email}</p>
-              </div>
+              <div className="px-8 pb-8 relative">
+                <div className="flex flex-col md:flex-row gap-6 items-start">
 
-              <div>
-                <label className="text-gray-500">Department</label>
-                <p>{selectedEmployee.departmentName}</p>
-              </div>
-
-              <div>
-                <label className="text-gray-500">Employee ID</label>
-                <p>{selectedEmployee.employeeId}</p>
-              </div>
-
-              <div>
-                <label className="text-gray-500">Role</label>
-                <p>{selectedEmployee.role || "Faculty"}</p>
-              </div>
-            </div>
-
-            {/* Courses */}
-            <h2 className="text-xl font-semibold mb-3">Assigned Courses</h2>
-            <div className="grid grid-cols-2 gap-4">
-              {courses.length > 0 ? (
-                courses.map((course) => (
-                  <div key={course.courseId} className="p-4 border rounded-lg bg-gray-100">
-                    <h3 className="font-semibold">{course.courseCode}</h3>
-                    <p className="text-gray-700">{course.courseName}</p>
+                  {/* Avatar - overlapping banner */}
+                  <div className="-mt-16 relative">
+                    <div className="w-32 h-32 rounded-2xl border-4 border-white shadow-md bg-white overflow-hidden">
+                      {selectedEmployee.photographPath ? (
+                        <img
+                          src={selectedEmployee.photographPath}
+                          alt={`${selectedEmployee.firstName} ${selectedEmployee.lastName}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.target.src = "https://ui-avatars.com/api/?name=" + selectedEmployee.firstName + "+" + selectedEmployee.lastName + "&background=random"; }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-3xl font-bold">
+                          {selectedEmployee.firstName?.charAt(0)}{selectedEmployee.lastName?.charAt(0)}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                ))
+
+                  {/* Name & Title */}
+                  <div className="pt-4 flex-1">
+                    <h1 className="text-3xl font-bold text-gray-900">
+                      {selectedEmployee.firstName} {selectedEmployee.lastName}
+                    </h1>
+                    <div className="flex items-center gap-3 mt-2">
+                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 border border-indigo-200">
+                        {selectedEmployee.title || 'Faculty'}
+                      </span>
+                      <span className="text-gray-500 text-sm flex items-center gap-1">
+                        🏢 {selectedEmployee.departmentName || 'Department N/A'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Edit Button (Admin only) */}
+                  {isAdmin && (
+                    <button
+                      onClick={() => navigate(`/auth/update/${selectedEmployee.id}`)}
+                      className="mt-4 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 hover:text-indigo-600 transition-colors shadow-sm flex items-center gap-2"
+                    >
+                      ✏️ Edit Profile
+                    </button>
+                  )}
+                </div>
+
+                {/* Contact Info Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 pt-8 border-t border-gray-100">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Email Address</label>
+                    <p className="text-gray-700 font-medium flex items-center gap-2">
+                      ✉️ {selectedEmployee.email}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Employee ID</label>
+                    <p className="text-gray-700 font-medium font-mono bg-gray-50 inline-block px-2 py-1 rounded">
+                      #{selectedEmployee.employeeId}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Courses Section */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+              <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <span className="text-purple-600">📚</span> Assigned Courses
+              </h2>
+
+              {courses.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {courses.map((course) => (
+                    <div key={course.id} className="group p-5 rounded-xl border border-gray-200 hover:border-indigo-300 hover:shadow-md transition-all duration-200 bg-white">
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="px-2 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded uppercase tracking-wide">
+                          {course.courseCode}
+                        </span>
+                        {course.credits && (
+                          <span className="text-xs text-gray-400 font-medium">{course.credits} Credits</span>
+                        )}
+                      </div>
+                      <h3 className="font-bold text-gray-800 group-hover:text-indigo-700 transition-colors">
+                        {course.name}
+                      </h3>
+                      {course.description && (
+                        <p className="text-sm text-gray-500 mt-2 line-clamp-2">
+                          {course.description}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               ) : (
-                <p>No courses assigned</p>
+                <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                  <p className="text-gray-400 font-medium">No courses currently assigned.</p>
+                </div>
               )}
             </div>
 
@@ -209,7 +280,7 @@ function EmployeeDirectory() {
                 Edit Employee
               </button>
             )}
-          </>
+          </div>
         ) : (
           <p>Select an employee from the list.</p>
         )}

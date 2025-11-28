@@ -18,6 +18,7 @@ public class EmployeeResponse {
     private String departmentName;
     private String role;
     private List<String> roles;
+    private List<com.shruti.facultyManagement.entity.FacultyCourses> facultyCourses;
 
     public int getId() {
         return id;
@@ -26,6 +27,15 @@ public class EmployeeResponse {
     public void setId(int id) {
         this.id = id;
     }
+
+    public List<com.shruti.facultyManagement.entity.FacultyCourses> getFacultyCourses() {
+        return facultyCourses;
+    }
+
+    public void setFacultyCourses(List<com.shruti.facultyManagement.entity.FacultyCourses> facultyCourses) {
+        this.facultyCourses = facultyCourses;
+    }
+    // ... (rest of getters/setters)
 
     public int getEmployeeId() {
         return employeeId;
@@ -119,6 +129,7 @@ public class EmployeeResponse {
         response.setLastName(employee.getLastName());
         response.setEmail(employee.getEmail());
         response.setTitle(employee.getTitle());
+        response.setFacultyCourses(employee.getFacultyCourses());
         String photo = employee.getPhotographPath();
         if (photo != null && !photo.trim().isEmpty()) {
             // Clean up the photo path - remove any existing base URL

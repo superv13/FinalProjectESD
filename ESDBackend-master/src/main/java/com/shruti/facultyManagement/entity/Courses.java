@@ -32,6 +32,7 @@ public class Courses {
 
     @ManyToOne
     @JoinColumn(name = "faculty_id")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Employees faculty;
 
     public Courses() {

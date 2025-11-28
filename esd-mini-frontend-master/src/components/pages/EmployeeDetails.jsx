@@ -13,7 +13,7 @@ function EmployeeDetails() {
 
   useEffect(() => {
 
-    if (!employeeId) {
+    if (!employeeId || employeeId === 'undefined') {
       navigate('/auth/user-management');
       return;
     }
@@ -37,8 +37,9 @@ function EmployeeDetails() {
         const data = await response.json();
         setEmployee(data);
 
+        // Use the Business Key (data.employeeId) to fetch courses
         const coursesResponse = await fetch(
-          `http://localhost:8081/api/employees/${employeeId}/courses`,
+          `http://localhost:8081/api/employees/${data.employeeId}/courses`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -127,9 +128,9 @@ function EmployeeDetails() {
             {courses.length > 0 ? (
               <div className="courses-grid">
                 {courses.map((course) => (
-                  <div key={course.courseId} className="course-card">
+                  <div key={course.id} className="course-card">
                     <h3>{course.courseCode}</h3>
-                    <p>{course.courseName}</p>
+                    <p>{course.name}</p>
                   </div>
                 ))}
               </div>

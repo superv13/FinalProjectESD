@@ -15,10 +15,10 @@ function UserManagementPage() {
         const token = localStorage.getItem('token');
         if (!token) throw new Error("Unauthorized access. Please log in.");
         const response = await UserService.getAllUsers(token);
-        console.log(response);
+        console.log('Raw API Response:', response);
         if (response && Array.isArray(response.employeesList)) {
-          const filteredUsers = response.employeesList.filter(user => user.title !== "ROLE_ADMIN");
-          setUsers(filteredUsers);
+          // const filteredUsers = response.employeesList.filter(user => user.title !== "ROLE_ADMIN");
+          setUsers(response.employeesList);
         } else {
           throw new Error("Invalid response format: Expected 'employeesList' to be an array.");
         }
@@ -56,7 +56,7 @@ function UserManagementPage() {
         </thead>
         <tbody>
           {users.map(user => (
-            <tr key={user.employeeId}>
+            <tr key={user.id}>
               <td>{user.employeeId}</td>
               <td>{user.firstName}</td>
               <td>{user.lastName}</td>
@@ -72,10 +72,10 @@ function UserManagementPage() {
                   'N/A'
                 )}
               </td>
-              <td>{user.facultyCourses && user.facultyCourses.length > 0 ? user.facultyCourses.map(fc => fc.course.courseCode).join(', ') : 'N/A'}</td>
+              <td>{user.facultyCourses && user.facultyCourses.length > 0 ? user.facultyCourses.map(fc => fc.course.code).join(', ') : 'N/A'}</td>
               <td className="action-cell">
                 <button
-                  onClick={() => navigate(`/auth/employee/${user.employeeId}`)}
+                  onClick={() => navigate(`/auth/employee/${user.id}`)}
                   className="action-btn view-btn"
                 >
                   View

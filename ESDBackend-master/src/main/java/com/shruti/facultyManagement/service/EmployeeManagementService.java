@@ -270,6 +270,7 @@ public class EmployeeManagementService {
                     cd.setName(fc.getCourse().getName());
                     cd.setDescription(fc.getCourse().getDescription());
                     cd.setCredits(fc.getCourse().getCredits());
+                    cd.setCourseCode(fc.getCourse().getCode());
                     return cd;
                 })
                 .collect(Collectors.toList());

@@ -72,8 +72,9 @@
 }
 
 .welcome-card .subtitle {
-  opacity: 0.9;
+  opacity: 0.8;
   margin: 8px 0 0 0;
+  color: #fff;
 }
 
 .action-card h3 {

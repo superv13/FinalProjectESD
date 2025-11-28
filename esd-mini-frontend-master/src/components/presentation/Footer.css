@@ -1,21 +1,38 @@
 /* Footer container styling */
 .footer {
-    position: fixed; /* Sticks the footer to the bottom */
-    bottom: 0;
-    width: 100%;
-    background-color: #3a1a50; /* Bootstrap dark gray */
-    color: #ffffff; /* White text */
-    text-align: center;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: linear-gradient(90deg, #6b4ce6, #8f6df0);
+  /* soft violet gradient */
+  color: #f8f6ff;
+  /* soft white */
+  text-align: center;
+  padding: 12px 0;
+  font-size: 15px;
+  font-weight: 500;
+  backdrop-filter: blur(6px);
+  /* frosted glass effect */
+
+  /* smooth top edges */
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+
+  /* soft glowing shadow */
+  box-shadow: 0 -4px 12px rgba(111, 61, 255, 0.25);
+
+  transition: all 0.3s ease-in-out;
+}
+
+/* Hover effect */
+.footer:hover {
+  box-shadow: 0 -6px 16px rgba(111, 61, 255, 0.32);
+}
+
+/* Responsive padding for smaller screens */
+@media (max-width: 768px) {
+  .footer {
+    font-size: 13px;
     padding: 10px 0;
-    font-size: 14px;
-    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
   }
-  
-  /* Responsive padding for smaller screens */
-  @media (max-width: 768px) {
-    .footer {
-      font-size: 12px;
-      padding: 8px 0;
-    }
-  }
-  
+}

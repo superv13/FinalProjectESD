@@ -66,7 +66,7 @@ function MyProfile() {
         setProfile(data);
 
         // Fetch courses
-        const coursesData = await UserService.getCoursesByEmployeeId(data.id, token);
+        const coursesData = await UserService.getCoursesByEmployeeId(data.employeeId, token);
         setCourses(Array.isArray(coursesData) ? coursesData : []);
       } catch (err) {
         setError("Failed to load profile");
@@ -482,7 +482,7 @@ function MyProfile() {
 
                 <div style={{ gridColumn: '1 / -1', marginTop: '20px', textAlign: 'center' }}>
                   <button
-                    onClick={() => navigate(`/auth/update/${profile.id}`)}
+                    onClick={() => navigate(`/auth/update/${profile.id}`, { state: { from: 'profile' } })}
                     className="ai-btn"
                     style={{ fontSize: '14px', padding: '10px 20px' }}
                   >
@@ -500,25 +500,25 @@ function MyProfile() {
             {courses.length > 0 ? (
               <ul className="courses-list">
                 {courses.map((course) => (
-                  <li key={course.courseId}>
+                  <li key={course.id}>
                     <div className="course-header">
                       <strong>{course.courseCode}</strong>
-                      <span>{course.courseName || 'No name'}</span>
+                      <span>{course.name || 'No name'}</span>
                       <div className="spacer"></div>
                       <button
-                        onClick={() => handleGenerateSyllabus(course.courseId, course.courseCode, course.courseName)}
+                        onClick={() => handleGenerateSyllabus(course.id, course.courseCode, course.name)}
                         className="ai-btn ai-btn-sm"
-                        disabled={loadingCourseId === course.courseId}
+                        disabled={loadingCourseId === course.id}
                       >
-                        {loadingCourseId === course.courseId ? '✨ Thinking...' : '✨ Syllabus Insight'}
+                        {loadingCourseId === course.id ? '✨ Thinking...' : '✨ Syllabus Insight'}
                       </button>
                     </div>
 
                     {/* AI Course Insight Result */}
-                    {courseInsights[course.courseId] && (
+                    {courseInsights[course.id] && (
                       <div className="ai-course-box">
                         <strong>AI Suggested Learning Outcomes:</strong>
-                        <div style={{ marginTop: '4px' }}>{courseInsights[course.courseId]}</div>
+                        <div style={{ marginTop: '4px' }}>{courseInsights[course.id]}</div>
                       </div>
                     )}
                   </li>

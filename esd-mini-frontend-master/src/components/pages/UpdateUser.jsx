@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import UserService from '../service/UserService';
 import '../presentation/UpdateUser.css';
 import { jwtDecode } from "jwt-decode";
 
 function UpdateUser() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { employeeId } = useParams();
 
   const [userData, setUserData] = useState({
@@ -69,12 +70,12 @@ function UpdateUser() {
         } = response;
 
         setUserData({
-          employeeRefId,
-          firstName,
-          lastName,
-          email,
-          title,
-          photographPath,
+          employeeRefId: employeeRefId || '',
+          firstName: firstName || '',
+          lastName: lastName || '',
+          email: email || '',
+          title: title || '',
+          photographPath: photographPath || '',
           department: department?.departmentId || department || '',
           role: role || 'ROLE_USER'  // Default to ROLE_USER if not provided
         });
@@ -201,7 +202,13 @@ function UpdateUser() {
       }
 
       alert('User details updated successfully!');
-      navigate('/auth/user-management');
+
+      // Check if we came from profile page
+      if (location.state?.from === 'profile') {
+        navigate('/dashboard/profile');
+      } else {
+        navigate('/auth/user-management');
+      }
     } catch (error) {
       console.error('Error updating user details:', error);
       alert('Failed to update. Try again.');
