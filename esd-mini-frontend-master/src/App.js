@@ -8,6 +8,7 @@ import UpdateUser from './components/pages/UpdateUser';
 import UserManagementPage from './components/pages/UserManagement';
 import EmployeeDetails from './components/pages/EmployeeDetails';
 import EmployeeDirectory from "./components/pages/EmployeeDirectory";
+import CourseList from "./components/pages/CourseList";
 
 
 import OAuth2Redirect from "./components/auth/Oauth2redirect";
@@ -24,6 +25,7 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/profile" element={<MyProfile />} />
             <Route path="/employees" element={<EmployeeDirectory />} />
+            <Route path="/dashboard/courses" element={<CourseList />} />
             <Route path="/employees" element={<EmployeeDirectory />} />
             <Route path="/employees/:employeeId" element={<EmployeeDetails />} />
             <Route path="/auth/user-management" element={<UserManagementPage />} />

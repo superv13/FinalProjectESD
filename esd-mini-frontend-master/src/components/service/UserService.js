@@ -1,92 +1,142 @@
 import axios from "axios";
 
-class UserService{
-    static BASE_URL = "http://localhost:8081"
-    static async login(email,password){
-        try{
-            // Backend signin endpoint is POST /api/auth/signin
-            const response = await axios.post(`${UserService.BASE_URL}/api/auth/signin`, { email, password });
-            // Normalize token keys: backend may return 'token' or 'accessToken'
+class UserService {
+    static BASE_URL = "http://localhost:8081";
+
+    /** Utility: Returns headers with token */
+    static authHeaders(token) {
+        return {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        };
+    }
+
+    /** LOGIN */
+    static async login(email, password) {
+        try {
+            const response = await axios.post(
+                `${UserService.BASE_URL}/api/auth/signin`,
+                { email, password }
+            );
+
             const data = response.data || {};
+
+            // Normalize token key
             if (!data.token && data.accessToken) data.token = data.accessToken;
+
             return data;
-        } catch(err){
+        } catch (err) {
             throw err;
         }
     }
 
-    static async getAllUsers(token){
-        try{
-            // Backend: GET /api/employees/all
-            const response = await axios.get(`${UserService.BASE_URL}/api/employees/all`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+    /** GET CURRENT USER (/me) */
+    static async getCurrentUser(token) {
+        try {
+            const response = await axios.get(
+                `${UserService.BASE_URL}/api/employees/me`,
+                UserService.authHeaders(token)
+            );
             return response.data;
-        }catch(err){
+        } catch (err) {
+            console.error("Error fetching current user:", err.response ? err.response.data : err.message);
             throw err;
         }
     }
 
-    static async getUserById(employeeId, token){
-        try{
-            // Backend: GET /api/employees/{id}
-            const response = await axios.get(`${UserService.BASE_URL}/api/employees/${employeeId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+    /** GET ALL USERS */
+    static async getAllUsers(token) {
+        try {
+            const response = await axios.get(
+                `${UserService.BASE_URL}/api/employees/all`,
+                UserService.authHeaders(token)
+            );
             return response.data;
-        }catch(err){
+        } catch (err) {
             throw err;
         }
     }
 
-    static async updateUser(employeeId, userData, token){
-        try{
-            // Backend: PUT /api/employees/{id}
-            const response = await axios.put(`${UserService.BASE_URL}/api/employees/${employeeId}`, userData, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+    /** GET USER BY ID */
+    static async getUserById(employeeId, token) {
+        try {
+            const response = await axios.get(
+                `${UserService.BASE_URL}/api/employees/${employeeId}`,
+                UserService.authHeaders(token)
+            );
             return response.data;
-        }catch(err){
-            console.error('Error:', err.response ? err.response.data : err.message);
+        } catch (err) {
             throw err;
         }
     }
 
+    /** UPDATE USER */
+    static async updateUser(employeeId, userData, token) {
+        try {
+            const response = await axios.put(
+                `${UserService.BASE_URL}/api/employees/${employeeId}`,
+                userData,
+                UserService.authHeaders(token)
+            );
+            return response.data;
+        } catch (err) {
+            console.error("Error updating user:", err.response ? err.response.data : err.message);
+            throw err;
+        }
+    }
+
+    /** GET COURSES OF EMPLOYEE */
     static async getCoursesByEmployeeId(employeeId, token) {
         try {
-            // Backend: GET /api/employees/{employeeId}/courses
-            const response = await axios.get(`${UserService.BASE_URL}/api/employees/${employeeId}/courses`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await axios.get(
+                `${UserService.BASE_URL}/api/employees/${employeeId}/courses`,
+                UserService.authHeaders(token)
+            );
             return response.data;
         } catch (err) {
             throw err;
         }
     }
 
+    /** GET ALL COURSES (AUTH REQUIRED) */
     static async getAllCourses(token) {
         try {
-            // Backend: GET /api/employees/auth/courses
-            const response = await axios.get(`${UserService.BASE_URL}/api/employees/auth/courses`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            return response.data;  // response should contain CourseReqRes
+            const response = await axios.get(
+                `${UserService.BASE_URL}/api/employees/auth/courses`,
+                UserService.authHeaders(token)
+            );
+            return response.data;
         } catch (err) {
-            console.error('Error fetching courses:', err.response ? err.response.data : err.message);
+            console.error("Error fetching courses:", err.response ? err.response.data : err.message);
             throw err;
         }
     }
-    
 
-    /**AUTHENTICATION CHECKER */
-    static logout(){
-        localStorage.removeItem('token')
-        window.dispatchEvent(new Event('storage'));
+    /** ASSIGN COURSE TO EMPLOYEE */
+    static async assignCourse(employeeId, courseCode, token) {
+        try {
+            const response = await axios.put(
+                `${UserService.BASE_URL}/api/employees/auth/${employeeId}/course`,
+                { courseCode: courseCode },
+                UserService.authHeaders(token)
+            );
+            return response.data;
+        } catch (err) {
+            console.error("Error assigning course:", err.response ? err.response.data : err.message);
+            throw err;
+        }
     }
 
-    static isAuthenticated(){
-        const token = localStorage.getItem('token')
-        return !!token
+    /** AUTH HELPERS */
+    static logout() {
+        localStorage.removeItem("token");
+        window.dispatchEvent(new Event("storage"));
+    }
+
+    static isAuthenticated() {
+        const token = localStorage.getItem("token");
+        return !!token;
     }
 }
 

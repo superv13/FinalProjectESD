@@ -8,7 +8,7 @@ function MyProfile() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   const [photo, setPhoto] = useState(null);
 
   // Gemini AI States
@@ -18,31 +18,58 @@ function MyProfile() {
   const [courseInsights, setCourseInsights] = useState({}); // Map: courseId -> text
   const [loadingCourseId, setLoadingCourseId] = useState(null);
 
+  // useEffect(() => {
+  //   const fetchProfile = async () => {
+  //     try {
+  //       const token = localStorage.getItem('token');
+  //       if (!token) {
+  //         navigate('/');
+  //         return;
+  //       }
+  //       // Backend: GET /api/employees/profile
+  //       const response = await fetch('http://localhost:8081/api/employees/profile', {
+  //         headers: { Authorization: `Bearer ${token}` }
+  //       });
+  //       const data = await response.json();
+
+  //       if (data && data.id) {
+  //         setProfile(data);
+  //         // Fetch courses for this employee
+  //         const coursesResponse = await fetch(`http://localhost:8081/api/employees/${data.id}/courses`, {
+  //           headers: { Authorization: `Bearer ${token}` }
+  //         });
+  //         const coursesData = await coursesResponse.json();
+  //         setCourses(Array.isArray(coursesData) ? coursesData : []);
+  //       }
+  //     } catch (err) {
+  //       setError('Failed to load profile');
+  //       console.error(err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchProfile();
+  // }, [navigate]);
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (!token) {
-          navigate('/');
+          navigate("/");
           return;
         }
-        // Backend: GET /api/employees/profile
-        const response = await fetch('http://localhost:8081/api/employees/profile', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const data = await response.json();
-        
-        if (data && data.id) {
-          setProfile(data);
-          // Fetch courses for this employee
-          const coursesResponse = await fetch(`http://localhost:8081/api/employees/${data.id}/courses`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          const coursesData = await coursesResponse.json();
-          setCourses(Array.isArray(coursesData) ? coursesData : []);
-        }
+
+        // FIX: Use backend /me endpoint through UserService
+        const data = await UserService.getCurrentUser(token);
+        setProfile(data);
+
+        // Fetch courses
+        const coursesData = await UserService.getCoursesByEmployeeId(data.id, token);
+        setCourses(Array.isArray(coursesData) ? coursesData : []);
       } catch (err) {
-        setError('Failed to load profile');
+        setError("Failed to load profile");
         console.error(err);
       } finally {
         setLoading(false);
@@ -51,6 +78,7 @@ function MyProfile() {
 
     fetchProfile();
   }, [navigate]);
+
 
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
@@ -104,7 +132,7 @@ function MyProfile() {
     setLoadingBio(true);
     const role = profile.title === 'ROLE_ADMIN' ? 'Administrator' : 'Professor';
     const prompt = `Write a professional, welcoming biography (approx 80 words) for a university faculty member named ${profile.firstName} ${profile.lastName}. They are a ${role} in the ${profile.departmentName} department. Focus on their dedication to education.`;
-    
+
     const text = await callGemini(prompt);
     setAiBio(text);
     setLoadingBio(false);
@@ -113,9 +141,9 @@ function MyProfile() {
   const handleGenerateSyllabus = async (courseId, courseCode, courseName) => {
     setLoadingCourseId(courseId);
     const prompt = `Generate 3 brief, engaging bullet points summarizing the key learning outcomes for a university course titled "${courseName}" (${courseCode}). Format with plain text bullets.`;
-    
+
     const text = await callGemini(prompt);
-    setCourseInsights(prev => ({...prev, [courseId]: text}));
+    setCourseInsights(prev => ({ ...prev, [courseId]: text }));
     setLoadingCourseId(null);
   };
 
@@ -386,13 +414,13 @@ function MyProfile() {
           animation: fadeIn 0.3s;
         }
       `}</style>
-      
+
       <div className="profile-container">
         <button onClick={() => navigate(-1)} className="back-btn">← Back</button>
-        
+
         <div className="profile-card">
           <h1>My Profile</h1>
-          
+
           {error && <div className="error-message">{error}</div>}
 
           {profile && (
@@ -402,7 +430,7 @@ function MyProfile() {
                 {profile.photographPath ? (
                   <img src={profile.photographPath} alt="Profile" className="profile-photo" />
                 ) : (
-                  <div className="profile-photo" style={{display:'flex', alignItems:'center', justifyContent:'center', color:'#9ca3af'}}>No Photo</div>
+                  <div className="profile-photo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}>No Photo</div>
                 )}
                 <label className="upload-photo-btn">
                   Change Photo
@@ -430,26 +458,36 @@ function MyProfile() {
                     {profile.title === 'ROLE_ADMIN' ? 'Administrator' : 'Professor'}
                   </p>
                 </div>
-                
+
                 {/* AI Bio Generator Feature */}
-                <div style={{gridColumn: '1 / -1', marginTop: '10px'}}>
-                   {!aiBio ? (
-                       <button 
-                        onClick={handleGenerateBio} 
-                        disabled={loadingBio} 
-                        className="ai-btn"
-                       >
-                        {loadingBio ? '✨ Drafting...' : '✨ Generate Professional Bio'}
-                       </button>
-                   ) : (
-                       <div className="ai-result-box">
-                           <strong>Professional Bio (AI Generated):</strong><br/>
-                           {aiBio}
-                           <div style={{marginTop:'8px', fontSize:'11px', textAlign:'right'}}>
-                               <button onClick={() => setAiBio('')} style={{background:'none', border:'none', color:'#0f766e', cursor:'pointer', textDecoration:'underline'}}>Clear</button>
-                           </div>
-                       </div>
-                   )}
+                <div style={{ gridColumn: '1 / -1', marginTop: '10px' }}>
+                  {!aiBio ? (
+                    <button
+                      onClick={handleGenerateBio}
+                      disabled={loadingBio}
+                      className="ai-btn"
+                    >
+                      {loadingBio ? '✨ Drafting...' : '✨ Generate Professional Bio'}
+                    </button>
+                  ) : (
+                    <div className="ai-result-box">
+                      <strong>Professional Bio (AI Generated):</strong><br />
+                      {aiBio}
+                      <div style={{ marginTop: '8px', fontSize: '11px', textAlign: 'right' }}>
+                        <button onClick={() => setAiBio('')} style={{ background: 'none', border: 'none', color: '#0f766e', cursor: 'pointer', textDecoration: 'underline' }}>Clear</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ gridColumn: '1 / -1', marginTop: '20px', textAlign: 'center' }}>
+                  <button
+                    onClick={() => navigate(`/auth/update/${profile.id}`)}
+                    className="ai-btn"
+                    style={{ fontSize: '14px', padding: '10px 20px' }}
+                  >
+                    ✏️ Edit Profile
+                  </button>
                 </div>
 
               </div>
@@ -464,24 +502,24 @@ function MyProfile() {
                 {courses.map((course) => (
                   <li key={course.courseId}>
                     <div className="course-header">
-                        <strong>{course.courseCode}</strong>
-                        <span>{course.courseName || 'No name'}</span>
-                        <div className="spacer"></div>
-                        <button 
-                            onClick={() => handleGenerateSyllabus(course.courseId, course.courseCode, course.courseName)}
-                            className="ai-btn ai-btn-sm"
-                            disabled={loadingCourseId === course.courseId}
-                        >
-                            {loadingCourseId === course.courseId ? '✨ Thinking...' : '✨ Syllabus Insight'}
-                        </button>
+                      <strong>{course.courseCode}</strong>
+                      <span>{course.courseName || 'No name'}</span>
+                      <div className="spacer"></div>
+                      <button
+                        onClick={() => handleGenerateSyllabus(course.courseId, course.courseCode, course.courseName)}
+                        className="ai-btn ai-btn-sm"
+                        disabled={loadingCourseId === course.courseId}
+                      >
+                        {loadingCourseId === course.courseId ? '✨ Thinking...' : '✨ Syllabus Insight'}
+                      </button>
                     </div>
-                    
+
                     {/* AI Course Insight Result */}
                     {courseInsights[course.courseId] && (
-                        <div className="ai-course-box">
-                            <strong>AI Suggested Learning Outcomes:</strong>
-                            <div style={{marginTop:'4px'}}>{courseInsights[course.courseId]}</div>
-                        </div>
+                      <div className="ai-course-box">
+                        <strong>AI Suggested Learning Outcomes:</strong>
+                        <div style={{ marginTop: '4px' }}>{courseInsights[course.courseId]}</div>
+                      </div>
                     )}
                   </li>
                 ))}

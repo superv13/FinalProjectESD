@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import UserService from '../service/UserService';
 import '../presentation/UserManagement.css'
 
 function UserManagementPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [users, setUsers] = useState([]);
   const [error, setError] = useState("");
 
@@ -27,7 +28,7 @@ function UserManagementPage() {
       }
     };
     fetchUsers();
-  }, []);
+  }, [location]);
 
   if (error) {
     return <p className="error-message">{error}</p>;
@@ -62,9 +63,9 @@ function UserManagementPage() {
               <td>{user.email}</td>
               <td>
                 {user.photographPath ? (
-                  <img 
-                    src={user.photographPath} 
-                    alt={`${user.firstName} ${user.lastName}`} 
+                  <img
+                    src={user.photographPath}
+                    alt={`${user.firstName} ${user.lastName}`}
                     className='photo'
                   />
                 ) : (
@@ -73,16 +74,16 @@ function UserManagementPage() {
               </td>
               <td>{user.facultyCourses && user.facultyCourses.length > 0 ? user.facultyCourses.map(fc => fc.course.courseCode).join(', ') : 'N/A'}</td>
               <td className="action-cell">
-                <button 
+                <button
                   onClick={() => navigate(`/auth/employee/${user.employeeId}`)}
                   className="action-btn view-btn"
                 >
                   View
                 </button>
-                <button 
+                <button
                   className="action-btn edit-btn"
                 >
-                  <Link to={`/auth/update/${user.employeeId}`}>
+                  <Link to={`/auth/update/${user.id}`}>
                     Edit
                   </Link>
                 </button>

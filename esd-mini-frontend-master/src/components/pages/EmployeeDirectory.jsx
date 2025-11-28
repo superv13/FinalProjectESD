@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../presentation/EmployeeDetails.css"; // keep your existing CSS for styling photo/cards
+import { jwtDecode } from "jwt-decode";
 
 function EmployeeDirectory() {
   const navigate = useNavigate();
@@ -10,32 +11,54 @@ function EmployeeDirectory() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Load employees list on mount
   useEffect(() => {
     const loadEmployees = async () => {
       try {
         const token = localStorage.getItem("token");
+        console.log("Token:", token);
         if (!token) {
           navigate("/");
           return;
+        }
+
+        // Check for admin role
+        try {
+          const decoded = jwtDecode(token);
+          const roles = decoded.roles || [];
+          setIsAdmin(roles.includes("ROLE_ADMIN"));
+        } catch (e) {
+          console.error("Failed to decode token", e);
         }
 
         const response = await fetch("http://localhost:8081/api/employees/all", {
           headers: { Authorization: `Bearer ${token}` }
         });
 
+        console.log("Response Status:", response.status);
+
+        if (!response.ok) {
+          console.error("Response not OK:", response.statusText);
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
+        console.log("API Data:", data);
+
         const employeeList = data.employeesList || [];
+        console.log("Extracted Employee List:", employeeList);
+
         setEmployees(employeeList);
 
         // Auto-select the first employee
         if (employeeList.length > 0) {
-          loadEmployeeDetails(employeeList[0].employeeId);
+          loadEmployeeDetails(employeeList[0].id);
         }
 
       } catch (err) {
-        console.error(err);
+        console.error("Error loading employees:", err);
         setError("Unable to load employees.");
       } finally {
         setLoading(false);
@@ -46,30 +69,50 @@ function EmployeeDirectory() {
   }, [navigate]);
 
   // Load Employee Details + Courses
-  const loadEmployeeDetails = async (employeeId) => {
+  const loadEmployeeDetails = async (id) => {
     try {
+      console.log("Loading details for Employee PK ID:", id);
       const token = localStorage.getItem("token");
 
-      // Fetch employee
-      const response = await fetch(`http://localhost:8081/api/employees/${employeeId}`, {
+      // 1. Fetch employee using Primary Key (id)
+      const empUrl = `http://localhost:8081/api/employees/${id}`;
+      console.log("Fetching Employee URL:", empUrl);
+
+      const response = await fetch(empUrl, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
+      if (!response.ok) {
+        throw new Error(`Failed to fetch employee: ${response.status} ${response.statusText}`);
+      }
+
       const data = await response.json();
+      console.log("Employee Details Data:", data);
       setSelectedEmployee(data);
 
-      // Fetch courses
-      const courseRes = await fetch(
-        `http://localhost:8081/api/employees/${employeeId}/courses`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      // 2. Fetch courses using Business Key (employeeId) from the response
+      // The backend expects the 'employeeId' field (e.g. 12345), not the PK 'id' (e.g. 1)
+      const businessId = data.employeeId;
+      console.log("Using Business ID for courses:", businessId);
+
+      const courseUrl = `http://localhost:8081/api/employees/${businessId}/courses`;
+      console.log("Fetching Courses URL:", courseUrl);
+
+      const courseRes = await fetch(courseUrl, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!courseRes.ok) {
+        throw new Error(`Failed to fetch courses: ${courseRes.status} ${courseRes.statusText}`);
+      }
 
       const courseData = await courseRes.json();
+      console.log("Courses Data:", courseData);
       setCourses(Array.isArray(courseData) ? courseData : []);
 
     } catch (err) {
-      console.error(err);
-      setError("Failed to load employee details.");
+      console.error("Error in loadEmployeeDetails:", err);
+      alert("Failed to load details for this employee. Check console for errors.");
     }
   };
 
@@ -88,7 +131,7 @@ function EmployeeDirectory() {
             key={emp.employeeId}
             className={`p-4 cursor-pointer hover:bg-gray-200 transition ${selectedEmployee?.employeeId === emp.employeeId ? "bg-gray-200" : ""
               }`}
-            onClick={() => loadEmployeeDetails(emp.employeeId)}
+            onClick={() => loadEmployeeDetails(emp.id)}
           >
             <h3 className="font-medium">{emp.firstName} {emp.lastName}</h3>
             <p className="text-sm text-gray-600">{emp.title}</p>
@@ -158,12 +201,14 @@ function EmployeeDirectory() {
               )}
             </div>
 
-            <button
-              onClick={() => navigate(`/auth/update/${selectedEmployee.employeeId}`)}
-              className="mt-6 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-            >
-              Edit Employee
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => navigate(`/auth/update/${selectedEmployee.id}`)}
+                className="mt-6 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+              >
+                Edit Employee
+              </button>
+            )}
           </>
         ) : (
           <p>Select an employee from the list.</p>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import UserService from '../service/UserService';
-import '../presentation/UpdateUser.css'
+import '../presentation/UpdateUser.css';
+import { jwtDecode } from "jwt-decode";
 
 function UpdateUser() {
   const navigate = useNavigate();
@@ -13,105 +14,197 @@ function UpdateUser() {
     lastName: '',
     email: '',
     title: '',
-    photographPath:'',
-    department:'',
-    password:''
+    photographPath: '',
+    department: '',   // storing only departmentId
+    role: ''  // Add role field
   });
 
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState('');
   const [coursesLoading, setCoursesLoading] = useState(true);
   const [coursesError, setCoursesError] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [actualEmployeeId, setActualEmployeeId] = useState(null);
 
   useEffect(() => {
-    const fetchUserDataById = async (employeeId) => {
+    const fetchUserData = async () => {
       try {
         const token = localStorage.getItem('token');
         if (!token) {
-          console.error('Token is missing.');
           alert('Please log in again.');
-          navigate('/login');
-          return;
+          return navigate('/login');
         }
-        const response = await UserService.getUserById(employeeId, token);
-        const { employeeRefId, firstName, lastName, email, title, photographPath, department, password } = response.ourUsers;
-        setUserData({ employeeRefId, firstName, lastName, email, title, photographPath, department, password });
+
+        // Decode token to check role
+        try {
+          const decoded = jwtDecode(token);
+          const roles = decoded.roles || decoded.authorities || [];
+          setIsAdmin(roles.includes("ROLE_ADMIN"));
+        } catch (e) {
+          console.error("Failed to decode token", e);
+        }
+
+        let response;
+
+        // Check if we have a valid employeeId in the URL (admin editing another user)
+        if (employeeId && employeeId !== 'undefined' && employeeId !== '0') {
+          // Admin is editing a specific employee
+          response = await UserService.getUserById(employeeId, token);
+          setActualEmployeeId(parseInt(employeeId));
+        } else {
+          // User is editing their own profile
+          response = await UserService.getCurrentUser(token);
+          setActualEmployeeId(response.id);
+        }
+
+        const {
+          employeeRefId,
+          firstName,
+          lastName,
+          email,
+          title,
+          photographPath,
+          department,
+          role
+        } = response;
+
+        setUserData({
+          employeeRefId,
+          firstName,
+          lastName,
+          email,
+          title,
+          photographPath,
+          department: department?.departmentId || department || '',
+          role: role || 'ROLE_USER'  // Default to ROLE_USER if not provided
+        });
+
       } catch (error) {
         console.error('Error fetching user data:', error);
+        alert('Failed to load user data. Please try again.');
       }
     };
-  
+
     const fetchAllCourses = async () => {
       setCoursesLoading(true);
-      setCoursesError(null);
       try {
         const token = localStorage.getItem('token');
         if (!token) {
-          console.error('Token is missing.');
-          setCoursesError('Token is missing. Please log in again.');
-          navigate('/login');
-          return;
+          setCoursesError('Token missing. Please login.');
+          return navigate('/login');
         }
-        const response = await fetch('http://localhost:8080/auth/courses', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-  
-        const data = await response.json();
-        console.log('Courses API Response:', data);
-  
-        if (data.statusCode === 200) {
-          console.log('Courses loaded:', data.courseList);
-          setCourses(data.courseList || []);
+
+        const data = await UserService.getAllCourses(token);
+
+        if (data.courseList) {
+          setCourses(data.courseList);
         } else {
-          console.error('Error from API:', data.message);
-          setCoursesError(data.message || 'Failed to load courses');
+          setCoursesError('Failed to load courses');
         }
       } catch (error) {
         console.error('Error fetching courses:', error);
-        setCoursesError('Failed to load courses. Check console for details.');
+        setCoursesError('Failed to load courses.');
       } finally {
         setCoursesLoading(false);
       }
     };
-  
-    if (employeeId) {
-      fetchUserDataById(employeeId);
-    }
+
+    fetchUserData();
     fetchAllCourses();
   }, [employeeId, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setUserData((prevUserData) => ({
-      ...prevUserData,
-      [name]: value
-    }));
+    setUserData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleCourseChange = (e) => {
-    const selectedId = e.target.value;
-    setSelectedCourse(selectedId);
-    console.log("Selected course ID: ", selectedId);
+    setSelectedCourse(e.target.value);
   };
+
+  const departments = [
+    { id: 1, name: 'Computer Science' },
+    { id: 2, name: 'Electronics' },
+    { id: 3, name: 'Mechanical' },
+    { id: 4, name: 'Civil' },
+    { id: 5, name: 'Electrical' },
+    { id: 6, name: 'Information Technology' },
+    { id: 7, name: 'Artificial Intelligence' },
+    { id: 8, name: 'Data Science' },
+    { id: 9, name: 'Cyber Security' },
+    { id: 10, name: 'Robotics' },
+    { id: 11, name: 'Administration' }
+  ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!actualEmployeeId) {
+      alert('User data not loaded yet. Please wait.');
+      return;
+    }
+
     try {
-      console.log("Selected course ID before submit:", selectedCourse);
       const token = localStorage.getItem('token');
-      const updatedData = { ...userData, courseId: selectedCourse };
-      console.log("Updated Data Sent to Backend: ", updatedData);
-      const response = await UserService.updateUser(employeeId, updatedData, token);
-      console.log('User updated successfully:', response);
+      console.log('Token:', token ? 'Token exists (length: ' + token.length + ')' : 'NO TOKEN FOUND');
+
+      // Only send fields that exist in the backend Employees entity
+      const updatedData = {
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        title: userData.title || '',
+        role: userData.role,
+        employeeId: userData.employeeRefId ? parseInt(userData.employeeRefId) : 0,
+        department: userData.department
+          ? { departmentId: parseInt(userData.department) }
+          : null,
+      };
+
+      // Only include password if it's being changed (not empty)
+      if (userData.password && userData.password.trim() !== '') {
+        updatedData.password = userData.password;
+      }
+
+      console.log('Sending update data:', updatedData);
+      console.log('Actual Employee ID:', actualEmployeeId);
+      console.log('Department value:', userData.department);
+      console.log('Selected Course:', selectedCourse);
+
+      const updateResponse = await UserService.updateUser(actualEmployeeId, updatedData, token);
+      console.log('Update response:', updateResponse);
+
+      // If a course is selected, assign it to the employee
+      if (selectedCourse && selectedCourse.trim() !== '') {
+        try {
+          // Find the course object to get its code
+          const selectedCourseObj = courses.find(c => c.id === parseInt(selectedCourse));
+          console.log('Selected course object:', selectedCourseObj);
+
+          if (selectedCourseObj && selectedCourseObj.courseCode) {
+            console.log('Assigning course:', selectedCourseObj.courseCode, 'to employee ID:', actualEmployeeId);
+            const courseResponse = await UserService.assignCourse(
+              actualEmployeeId,
+              selectedCourseObj.courseCode,
+              token
+            );
+            console.log('Course assignment response:', courseResponse);
+          } else {
+            console.error('Course object not found or missing courseCode');
+          }
+        } catch (courseError) {
+          console.error('Error assigning course:', courseError);
+          console.error('Course error details:', courseError.response ? courseError.response.data : courseError.message);
+          alert('Employee updated but course assignment failed: ' + (courseError.response ? courseError.response.data.message : courseError.message));
+          return;
+        }
+      }
+
       alert('User details updated successfully!');
       navigate('/auth/user-management');
     } catch (error) {
       console.error('Error updating user details:', error);
-      alert('Failed to update user details. Please try again.');
+      alert('Failed to update. Try again.');
     }
   };
 
@@ -119,59 +212,76 @@ function UpdateUser() {
     <div className="auth-container">
       <h2>Modify Faculty Details</h2>
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Employee Id:</label>
-          <input type="text" name="employeeRefId" value={userData.employeeRefId} onChange={handleInputChange} />
-        </div>
+        {isAdmin && (
+          <>
+            <div className="form-group">
+              <label>Employee Id:</label>
+              <input
+                type="text"
+                name="employeeRefId"
+                value={userData.employeeRefId}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Department:</label>
+              <select
+                name="department"
+                value={userData.department}
+                onChange={handleInputChange}
+              >
+                <option key="dept-default" value="">Select Department</option>
+                {departments.map((dept) => (
+                  <option key={dept.id} value={dept.id}>
+                    {dept.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </>
+        )}
+
         <div className="form-group">
           <label>First Name:</label>
           <input type="text" name="firstName" value={userData.firstName} onChange={handleInputChange} />
         </div>
+
         <div className="form-group">
           <label>Last Name:</label>
           <input type="text" name="lastName" value={userData.lastName} onChange={handleInputChange} />
         </div>
+
         <div className="form-group">
           <label>Email:</label>
           <input type="email" name="email" value={userData.email} onChange={handleInputChange} />
         </div>
-        <div className="form-group">
-          <label>Title:</label>
-          <input type="text" name="title" value={userData.title} onChange={handleInputChange} />
-        </div>
-        <div className="form-group">
-          <label>Photograph File Path:</label>
-          <input type="text" name="photographPath" value={userData.photographPath} onChange={handleInputChange} />
-        </div>
-        <div className="form-group">
-          <label>Department:</label>
-          <input type="text" name="department" value={userData.department} onChange={handleInputChange} />
-        </div>
+
         <div className="form-group">
           <label>Course:</label>
-          <select value={selectedCourse} onChange={handleCourseChange} disabled={coursesLoading}>
-            <option value="">
-              {coursesLoading ? 'Loading courses...' : 'Select a course'}
+          <select value={selectedCourse} onChange={handleCourseChange}>
+            <option key="default" value="">
+              {coursesLoading ? 'Loading...' : 'Select a course'}
             </option>
+
             {coursesError && (
-              <option disabled style={{color: 'red'}}>
+              <option key="error" disabled style={{ color: 'red' }}>
                 Error: {coursesError}
               </option>
             )}
+
             {!coursesLoading && courses.length === 0 && (
-              <option disabled>No courses available</option>
+              <option key="no-courses" disabled>No courses available</option>
             )}
+
             {courses.map((course) => (
-              <option key={course.courseId} value={course.courseId}>
-                {course.courseCode} - {course.courseName || 'No name available'}
+              <option key={course.id} value={course.id}>
+                {course.courseCode} - {course.name}
               </option>
             ))}
           </select>
         </div>
-        <div className="form-group">
-          <label>Password:</label>
-          <input type="text" name="password" value={userData.password} onChange={handleInputChange} />
-        </div>
+
         <button type="submit">Update</button>
       </form>
     </div>
