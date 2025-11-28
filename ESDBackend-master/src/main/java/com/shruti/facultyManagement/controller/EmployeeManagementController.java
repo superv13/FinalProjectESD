@@ -40,11 +40,16 @@ public class EmployeeManagementController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<EmployeeResponse> updateEmployee(
             @PathVariable Integer id,
             @RequestBody Employees employeeDetails) {
-        return ResponseEntity.ok(employeeManagementService.updateEmployee(id, employeeDetails));
+        try {
+            return ResponseEntity.ok(employeeManagementService.updateEmployee(id, employeeDetails));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @DeleteMapping("/{id}")
@@ -57,6 +62,12 @@ public class EmployeeManagementController {
     @GetMapping("/profile")
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<EmployeeResponse> getMyProfile() {
+        return ResponseEntity.ok(employeeManagementService.getMyProfile());
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<EmployeeResponse> getCurrentUser() {
         return ResponseEntity.ok(employeeManagementService.getMyProfile());
     }
 

@@ -3,11 +3,13 @@ package com.shruti.facultyManagement.service;
 import com.shruti.facultyManagement.dto.CourseDisplay;
 import com.shruti.facultyManagement.dto.EmployeeReqRes;
 import com.shruti.facultyManagement.entity.Courses;
+import com.shruti.facultyManagement.entity.Departments;
 import com.shruti.facultyManagement.entity.Employees;
 import com.shruti.facultyManagement.entity.FacultyCourses;
 import com.shruti.facultyManagement.exception.ResourceNotFoundException;
 import com.shruti.facultyManagement.payload.response.EmployeeResponse;
 import com.shruti.facultyManagement.repository.CoursesRepo;
+import com.shruti.facultyManagement.repository.DepartmentsRepo;
 import com.shruti.facultyManagement.repository.EmployeeRepo;
 import com.shruti.facultyManagement.repository.FacultyCoursesRepository;
 import com.shruti.facultyManagement.security.JwtUtils;
@@ -36,6 +38,7 @@ public class EmployeeManagementService {
     private final EmployeeRepo employeeRepo;
     private final CoursesRepo coursesRepo;
     private final FacultyCoursesRepository facultyCoursesRepository;
+    private final DepartmentsRepo departmentsRepo;
     private final JwtUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
@@ -48,14 +51,16 @@ public class EmployeeManagementService {
 
     @Autowired
     public EmployeeManagementService(EmployeeRepo employeeRepo,
-                                     CoursesRepo coursesRepo,
-                                     FacultyCoursesRepository facultyCoursesRepository,
-                                     JwtUtils jwtUtils,
-                                     AuthenticationManager authenticationManager,
-                                     PasswordEncoder passwordEncoder) {
+            CoursesRepo coursesRepo,
+            FacultyCoursesRepository facultyCoursesRepository,
+            DepartmentsRepo departmentsRepo,
+            JwtUtils jwtUtils,
+            AuthenticationManager authenticationManager,
+            PasswordEncoder passwordEncoder) {
         this.employeeRepo = employeeRepo;
         this.coursesRepo = coursesRepo;
         this.facultyCoursesRepository = facultyCoursesRepository;
+        this.departmentsRepo = departmentsRepo;
         this.jwtUtils = jwtUtils;
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
@@ -77,7 +82,6 @@ public class EmployeeManagementService {
         return response;
     }
 
-
     private String getDepartmentName(int departmentId) {
         // Map department IDs to names
         return switch (departmentId) {
@@ -91,6 +95,7 @@ public class EmployeeManagementService {
             case 8 -> "Data Science";
             case 9 -> "Cyber Security";
             case 10 -> "Robotics";
+            case 11 -> "Administration";
             default -> "Department " + departmentId;
         };
     }
@@ -99,20 +104,20 @@ public class EmployeeManagementService {
         EmployeeReqRes response = new EmployeeReqRes();
         try {
             List<Employees> employees = employeeRepo.findAll();
-            
+
             // Convert employees to EmployeeResponse to handle photo URLs properly
             List<EmployeeResponse> employeeResponses = employees.stream()
-                .map(employee -> {
-                    EmployeeResponse empResponse = EmployeeResponse.fromEmployee(employee);
-                    if (employee.getDepartment() != null) {
-                        empResponse.setDepartment(employee.getDepartment().getDepartmentId());
-                        empResponse.setDepartmentName(employee.getDepartment().getDepartmentName());
-                    }
+                    .map(employee -> {
+                        EmployeeResponse empResponse = EmployeeResponse.fromEmployee(employee);
+                        if (employee.getDepartment() != null) {
+                            empResponse.setDepartment(employee.getDepartment().getDepartmentId());
+                            empResponse.setDepartmentName(employee.getDepartment().getDepartmentName());
+                        }
 
-                    return empResponse;
-                })
-                .collect(Collectors.toList());
-            
+                        return empResponse;
+                    })
+                    .collect(Collectors.toList());
+
             response.setEmployeesList(employeeResponses);
             response.setStatusCode(200);
             response.setMessage("Success");
@@ -132,7 +137,25 @@ public class EmployeeManagementService {
         employee.setLastName(employeeDetails.getLastName());
         employee.setEmail(employeeDetails.getEmail());
         employee.setTitle(employeeDetails.getTitle());
-        employee.setDepartment(employeeDetails.getDepartment());
+
+        // Update employeeId if provided
+        if (employeeDetails.getEmployeeId() != 0) {
+            employee.setEmployeeId(employeeDetails.getEmployeeId());
+        }
+
+        // Handle Department Update
+        if (employeeDetails.getDepartment() != null) {
+            try {
+                // Fetch the actual department entity from the database
+                int deptId = employeeDetails.getDepartment().getDepartmentId();
+                Departments department = departmentsRepo.findByDepartmentId(deptId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Department not found with id: " + deptId));
+                employee.setDepartment(department);
+            } catch (Exception e) {
+                System.err.println("Error updating department: " + e.getMessage());
+                // Don't fail the entire update if just the department fails
+            }
+        }
         employee.setRole(employeeDetails.getRole());
 
         if (employeeDetails.getPassword() != null && !employeeDetails.getPassword().isEmpty()) {
@@ -161,7 +184,7 @@ public class EmployeeManagementService {
 
         Employees employee = employeeRepo.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with email: " + email));
-                
+
         EmployeeResponse response = EmployeeResponse.fromEmployee(employee);
         if (employee.getDepartment() != null) {
             response.setDepartment(employee.getDepartment().getDepartmentId());
@@ -179,9 +202,7 @@ public class EmployeeManagementService {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getEmail(),
-                            loginRequest.getPassword()
-                    )
-            );
+                            loginRequest.getPassword()));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -262,41 +283,44 @@ public class EmployeeManagementService {
                     cd.setName(course.getName());
                     cd.setDescription(course.getDescription());
                     cd.setCredits(course.getCredits());
+                    cd.setCourseCode(course.getCode());
                     return cd;
                 })
                 .collect(Collectors.toList());
     }
 
-    public EmployeeReqRes updateCourseForEmployee(Integer employeeId, String courseCode) {
+    public EmployeeReqRes updateCourseForEmployee(Integer id, String courseCode) {
         EmployeeReqRes response = new EmployeeReqRes();
         try {
-            // Find employee by employeeId
-            Employees employee = employeeRepo.findByEmployeeId(employeeId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + employeeId));
-            
+            // Find employee by database ID (PK)
+            Employees employee = employeeRepo.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + id));
+
             // Find course by course code
             Courses course = coursesRepo.findByCode(courseCode)
                     .orElseThrow(() -> new ResourceNotFoundException("Course not found with code: " + courseCode));
-            
+
             // Check if the course is already assigned
             Optional<FacultyCourses> existingAssignment = facultyCoursesRepository
-                    .findByEmployeeIdAndCourseCode(employeeId, courseCode);
-            
+                    .findByEmployeeAndCourse(employee, course);
+
             if (existingAssignment.isPresent()) {
                 response.setStatusCode(400);
                 response.setMessage("Course already assigned to this employee");
+                response.setEmployeeId(employee.getEmployeeId()); // Return the ID even on error
                 return response;
             }
-            
+
             // Create new assignment
             FacultyCourses facultyCourse = new FacultyCourses();
             facultyCourse.setEmployee(employee);
             facultyCourse.setCourse(course);
             facultyCoursesRepository.save(facultyCourse);
-            
+
             response.setStatusCode(200);
             response.setMessage("Course assigned successfully");
-            
+            response.setEmployeeId(employee.getEmployeeId());
+
         } catch (ResourceNotFoundException e) {
             response.setStatusCode(404);
             response.setMessage(e.getMessage());
@@ -318,13 +342,13 @@ public class EmployeeManagementService {
             if (fileName != null) {
                 // Remove any path information
                 cleanFileName = Paths.get(fileName).getFileName().toString();
-                
+
                 // If it's a URL, extract just the filename
                 if (cleanFileName.contains("/")) {
                     cleanFileName = cleanFileName.substring(cleanFileName.lastIndexOf('/') + 1);
                 }
             }
-            
+
             employee.setPhotographPath(cleanFileName);
             employeeRepo.save(employee);
 

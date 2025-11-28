@@ -16,7 +16,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-import static com.shruti.facultyManagement.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository.REDIRECT_URI_PARAM_COOKIE_NAME;
+import java.util.Optional;
 
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
@@ -24,9 +24,9 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
     public OAuth2AuthenticationSuccessHandler(JwtUtils jwtUtils,
-            HttpCookieOAuth2AuthorizationRequestRepository repo) {
+            HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository) {
         this.jwtUtils = jwtUtils;
-        this.httpCookieOAuth2AuthorizationRequestRepository = repo;
+        this.httpCookieOAuth2AuthorizationRequestRepository = httpCookieOAuth2AuthorizationRequestRepository;
     }
 
     @Override
@@ -42,7 +42,6 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         }
 
         clearAuthenticationAttributes(request, response);
-
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 
@@ -50,11 +49,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             HttpServletResponse response,
             Authentication authentication) {
 
-        // Get the redirect URI from cookie or use default
-        Optional<String> redirectUri = CookieUtils.getCookie(request, REDIRECT_URI_PARAM_COOKIE_NAME);
-
-        // If absent → go to frontend dashboard by default
-        String targetUrl = redirectUri.orElse("http://localhost:3000/dashboard");
+        // Always redirect to the frontend OAuth2 handler
+        String targetUrl = "http://localhost:3000/oauth2/redirect";
 
         // Create JWT from UserPrincipal
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();

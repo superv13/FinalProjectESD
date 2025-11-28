@@ -1,6 +1,5 @@
 package com.shruti.facultyManagement.security;
 
-import com.shruti.facultyManagement.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
 import com.shruti.facultyManagement.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -23,6 +22,7 @@ import com.shruti.facultyManagement.security.oauth2.CustomOAuth2UserService;
 import com.shruti.facultyManagement.security.oauth2.CustomOidcUserService;
 import com.shruti.facultyManagement.security.oauth2.OAuth2AuthenticationFailureHandler;
 import com.shruti.facultyManagement.security.oauth2.OAuth2AuthenticationSuccessHandler;
+import com.shruti.facultyManagement.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
 
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -73,10 +73,12 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        // Create the repository instance
-        HttpCookieOAuth2AuthorizationRequestRepository repository = cookieAuthorizationRequestRepository();
+    public HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository() {
+        return new HttpCookieOAuth2AuthorizationRequestRepository();
+    }
 
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -88,20 +90,23 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/images/**").permitAll()
                         .requestMatchers("/api/employees/auth/uploadPhoto/**").permitAll()
+                        .requestMatchers("/api/employees/auth/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(authorization -> authorization
                                 .baseUri("/oauth2/authorize")
-                                .authorizationRequestRepository(repository))
+                                .authorizationRequestRepository(cookieAuthorizationRequestRepository()))
                         .redirectionEndpoint(redirection -> redirection
                                 .baseUri("/login/oauth2/code/*"))
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService)
                                 .oidcUserService(customOidcUserService))
-                        .successHandler(new OAuth2AuthenticationSuccessHandler(jwtUtils, repository))
-                        .failureHandler(new OAuth2AuthenticationFailureHandler(repository)))
+                        .successHandler(new OAuth2AuthenticationSuccessHandler(jwtUtils,
+                                cookieAuthorizationRequestRepository()))
+                        .failureHandler(new OAuth2AuthenticationFailureHandler(cookieAuthorizationRequestRepository())))
                 .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -127,11 +132,6 @@ public class SecurityConfig {
         return http.getSharedObject(AuthenticationManagerBuilder.class)
                 .authenticationProvider(authenticationProvider())
                 .build();
-    }
-
-    @Bean
-    public HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository() {
-        return new HttpCookieOAuth2AuthorizationRequestRepository();
     }
 
     // OAuth2 handlers are now created directly in the filterChain method to avoid

@@ -2,13 +2,10 @@ package com.shruti.facultyManagement.payload.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.shruti.facultyManagement.entity.Employees;
-import lombok.Data;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class EmployeeResponse {
     private int id;
     private int employeeId;
@@ -22,11 +19,99 @@ public class EmployeeResponse {
     private String role;
     private List<String> roles;
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getEmployeeId() {
+        return employeeId;
+    }
+
+    public void setEmployeeId(int employeeId) {
+        this.employeeId = employeeId;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getPhotographPath() {
+        return photographPath;
+    }
+
+    public void setPhotographPath(String photographPath) {
+        this.photographPath = photographPath;
+    }
+
+    public int getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(int department) {
+        this.department = department;
+    }
+
+    public String getDepartmentName() {
+        return departmentName;
+    }
+
+    public void setDepartmentName(String departmentName) {
+        this.departmentName = departmentName;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public List<String> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<String> roles) {
+        this.roles = roles;
+    }
+
     public static EmployeeResponse fromEmployee(Employees employee) {
         if (employee == null) {
             return null;
         }
-        
+
         EmployeeResponse response = new EmployeeResponse();
         response.setId(employee.getId());
         response.setEmployeeId(employee.getEmployeeId());

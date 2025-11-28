@@ -33,25 +33,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         try {
+            System.err.println("JwtAuthenticationFilter: ENTERING doFilterInternal for " + request.getMethod() + " "
+                    + request.getRequestURI());
             String jwt = parseJwt(request);
-            if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-                String username = jwtUtils.extractUsername(jwt);
+            System.err.println("JwtAuthenticationFilter: Parsed JWT: " + jwt);
 
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                UsernamePasswordAuthenticationToken authentication = 
-                    new UsernamePasswordAuthenticationToken(
-                        userDetails, 
-                        null, 
-                        userDetails.getAuthorities());
-                
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+            if (jwt != null) {
+                boolean isValid = jwtUtils.validateJwtToken(jwt);
+                System.err.println("JwtAuthenticationFilter: Token validation result: " + isValid);
+
+                if (isValid) {
+                    String username = jwtUtils.extractUsername(jwt);
+                    System.err.println("JwtAuthenticationFilter: Extracted username: " + username);
+
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    System.err.println("JwtAuthenticationFilter: User loaded: " + userDetails.getUsername());
+
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities());
+
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    System.err.println("JwtAuthenticationFilter: Authentication set in context");
+                }
+            } else {
+                System.err.println("JwtAuthenticationFilter: No token found in request");
             }
         } catch (Exception e) {
-            logger.error("Cannot set user authentication: {}", e);
+            System.err.println("JwtAuthenticationFilter Error: " + e.getMessage());
+            e.printStackTrace();
         }
 
         filterChain.doFilter(request, response);
+        System.err.println("JwtAuthenticationFilter: EXITING doFilterInternal");
     }
 
     private String parseJwt(HttpServletRequest request) {
