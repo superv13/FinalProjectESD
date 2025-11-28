@@ -5,12 +5,19 @@ import '../presentation/EmployeeDetails.css';
 function EmployeeDetails() {
   const { employeeId } = useParams();
   const navigate = useNavigate();
+
   const [employee, setEmployee] = useState(null);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
+
+    if (!employeeId) {
+      navigate('/auth/user-management');
+      return;
+    }
+
     const fetchEmployeeData = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -19,48 +26,65 @@ function EmployeeDetails() {
           return;
         }
 
-        // Fetch employee details
         const response = await fetch(`http://localhost:8081/api/employees/${employeeId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
+
+        if (!response.ok) {
+          throw new Error("Failed to load employee");
+        }
+
         const data = await response.json();
-        console.log('Fetched employee:', data); // Debug log
         setEmployee(data);
 
-        // Fetch assigned courses
-        const coursesResponse = await fetch(`http://localhost:8081/api/employees/${employeeId}/courses`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const coursesResponse = await fetch(
+          `http://localhost:8081/api/employees/${employeeId}/courses`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
         const coursesData = await coursesResponse.json();
         setCourses(Array.isArray(coursesData) ? coursesData : []);
+
       } catch (err) {
-        setError('Failed to load employee details');
         console.error(err);
+        setError('Unable to load employee details.');
       } finally {
         setLoading(false);
       }
     };
-    
 
-    if (employeeId) {
-      fetchEmployeeData();
-    }
+    fetchEmployeeData();
+
   }, [employeeId, navigate]);
 
-  if (loading) return <div className="details-container"><p>Loading...</p></div>;
-  if (error) return <div className="details-container error-message">{error}</div>;
+  if (loading) {
+    return <div className="details-container"><p>Loading...</p></div>;
+  }
+
+  if (error) {
+    return <div className="details-container error-message">{error}</div>;
+  }
 
   return (
     <div className="details-container">
-      <button onClick={() => navigate(-1)} className="back-btn">← Back to List</button>
 
+      {/* Go back to employee list */}
+      <button
+        onClick={() => navigate('/employee-details')}
+        className="back-btn"
+      >
+        ← Back to List
+      </button>
+
+      {/* Employee Data */}
       {employee && (
         <div className="details-card">
+
           <div className="details-header">
             {employee.photographPath && (
               <img
                 src={
-                  employee.photographPath?.startsWith("http")
+                  employee.photographPath.startsWith("http")
                     ? employee.photographPath
                     : `http://localhost:8081/images/${employee.photographPath}`
                 }
@@ -68,8 +92,9 @@ function EmployeeDetails() {
                 className="details-photo"
               />
             )}
+
             <div className="details-title">
-              <h1>{`${employee.firstName} ${employee.lastName}`}</h1>
+              <h1>{employee.firstName} {employee.lastName}</h1>
               <p className="role">{employee.title}</p>
             </div>
           </div>
@@ -79,20 +104,24 @@ function EmployeeDetails() {
               <label>Email</label>
               <p>{employee.email}</p>
             </div>
+
             <div className="detail-field">
               <label>Department</label>
-              <p>{employee.departmentName}</p> 
+              <p>{employee.departmentName}</p>
             </div>
+
             <div className="detail-field">
               <label>Employee ID</label>
               <p>{employee.employeeId}</p>
             </div>
+
             <div className="detail-field">
               <label>Role</label>
-              <p>{employee.role || 'Faculty'}</p>
+              <p>{employee.role || "Faculty"}</p>
             </div>
           </div>
 
+          {/* Courses */}
           <div className="courses-section">
             <h2>Assigned Courses</h2>
             {courses.length > 0 ? (
@@ -100,7 +129,7 @@ function EmployeeDetails() {
                 {courses.map((course) => (
                   <div key={course.courseId} className="course-card">
                     <h3>{course.courseCode}</h3>
-                    <p>{course.courseName || 'Course'}</p>
+                    <p>{course.courseName}</p>
                   </div>
                 ))}
               </div>
@@ -109,14 +138,16 @@ function EmployeeDetails() {
             )}
           </div>
 
+          {/* Edit button */}
           <div className="actions">
-            <button 
-              onClick={() => navigate(`/auth/update/${employeeId}`)} 
+            <button
+              onClick={() => navigate(`/auth/update/${employeeId}`)}
               className="action-btn edit-btn"
             >
               Edit Employee
             </button>
           </div>
+
         </div>
       )}
     </div>

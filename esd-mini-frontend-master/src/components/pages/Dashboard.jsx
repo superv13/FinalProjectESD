@@ -64,10 +64,14 @@ function Dashboard() {
           <div className="card action-card">
             <h3>Faculty List</h3>
             <p>View all faculty members and their courses</p>
-            <button onClick={() => navigate('/auth/user-management')} className="card-btn">
-              View Employees →
+            <button
+                onClick={() => navigate('/employees')}
+                className="card-btn"
+            >
+                View Employees →
             </button>
-          </div>
+            </div>
+
 
           {/* Courses Card */}
           <div className="card action-card">

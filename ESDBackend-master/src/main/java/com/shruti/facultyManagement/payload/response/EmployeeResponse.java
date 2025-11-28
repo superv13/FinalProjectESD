@@ -50,9 +50,14 @@ public class EmployeeResponse {
         } else {
             response.setPhotographPath(null);
         }
-        response.setDepartment(employee.getDepartment());
+        // Department ID
+        if (employee.getDepartment() != null) {
+            response.setDepartment(employee.getDepartment().getDepartmentId());
+            response.setDepartmentName(employee.getDepartment().getDepartmentName());
+        }
         response.setRole(employee.getRole());
-        response.setRoles(employee.getRole() != null ? List.of(employee.getRole()) : null);
+
+        response.setRoles(employee.getRole() != null ? List.of(employee.getRole().split(",")) : null);
         // Department name will be set by the service layer
         return response;
     }

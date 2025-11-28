@@ -66,11 +66,18 @@ public class EmployeeManagementService {
     public EmployeeResponse getEmployeeById(Integer id) {
         Employees employee = employeeRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + id));
+
         EmployeeResponse response = EmployeeResponse.fromEmployee(employee);
-        response.setDepartmentName(getDepartmentName(employee.getDepartment()));
+
+        if (employee.getDepartment() != null) {
+            response.setDepartment(employee.getDepartment().getDepartmentId());
+            response.setDepartmentName(employee.getDepartment().getDepartmentName());
+        }
+
         return response;
     }
-    
+
+
     private String getDepartmentName(int departmentId) {
         // Map department IDs to names
         return switch (departmentId) {
@@ -97,7 +104,11 @@ public class EmployeeManagementService {
             List<EmployeeResponse> employeeResponses = employees.stream()
                 .map(employee -> {
                     EmployeeResponse empResponse = EmployeeResponse.fromEmployee(employee);
-                    empResponse.setDepartmentName(getDepartmentName(employee.getDepartment()));
+                    if (employee.getDepartment() != null) {
+                        empResponse.setDepartment(employee.getDepartment().getDepartmentId());
+                        empResponse.setDepartmentName(employee.getDepartment().getDepartmentName());
+                    }
+
                     return empResponse;
                 })
                 .collect(Collectors.toList());
@@ -129,7 +140,13 @@ public class EmployeeManagementService {
         }
 
         Employees updatedEmployee = employeeRepo.save(employee);
-        return EmployeeResponse.fromEmployee(updatedEmployee);
+        EmployeeResponse response = EmployeeResponse.fromEmployee(updatedEmployee);
+        if (employee.getDepartment() != null) {
+            response.setDepartment(employee.getDepartment().getDepartmentId());
+            response.setDepartmentName(employee.getDepartment().getDepartmentName());
+        }
+
+        return response;
     }
 
     public void deleteEmployee(Integer id) {
@@ -146,7 +163,11 @@ public class EmployeeManagementService {
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with email: " + email));
                 
         EmployeeResponse response = EmployeeResponse.fromEmployee(employee);
-        response.setDepartmentName(getDepartmentName(employee.getDepartment()));
+        if (employee.getDepartment() != null) {
+            response.setDepartment(employee.getDepartment().getDepartmentId());
+            response.setDepartmentName(employee.getDepartment().getDepartmentName());
+        }
+
         return response;
     }
 
@@ -200,11 +221,10 @@ public class EmployeeManagementService {
 
             if (jwtUtils.isTokenValid(refreshTokenRequest.getToken(), user)) {
                 String jwt = jwtUtils.generateToken(user);
-                response.setStatusCode(200);
                 response.setToken(jwt);
-                response.setRefreshToken(refreshTokenRequest.getToken());
                 response.setExpirationTime("24Hr");
-                response.setMessage("Successfully Refreshed Token");
+                response.setStatusCode(200);
+                response.setMessage("Token refreshed successfully");
                 response.setEmployeeId(user.getEmployeeId());
                 response.setEmail(user.getEmail());
                 response.setRole(user.getRole());
